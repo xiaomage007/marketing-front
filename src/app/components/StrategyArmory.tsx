@@ -1,5 +1,9 @@
 import { strategyArmory } from "@/apis";
 
+/**
+ * 抽奖策略装配组件
+ * @returns 
+ */
 export function StrategyArmory() {
     const strategyArmoryHandle = async () => {
         const queryParams = new URLSearchParams(window.location.search);
