@@ -151,7 +151,6 @@ export function LuckyGridPage() {
 
         </LuckyGrid>
 
-
     </>
 
 }

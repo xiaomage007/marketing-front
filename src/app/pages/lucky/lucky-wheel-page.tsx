@@ -8,7 +8,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import { LuckyWheel } from '@lucky-canvas/react'
 // 引入 @lucky-canvas/react 第三方抽奖转盘组件；该库未提供完善的 TS 类型声明，因此忽略类型校验
 
-import { queryRaffleAwardList, randomRaffle } from "@/apis";
+import { queryRaffleAwardList, draw } from "@/apis";
 // 引入接口请求方法：queryRaffleAwardList 用于查询奖品列表，randomRaffle 用于执行随机抽奖
 import { RaffleAwardVO } from "@/types/RaffleAwardVO"
 // 引入奖品数据 VO 类型定义，用于规范接口返回数据结构
@@ -22,12 +22,6 @@ import { RaffleAwardVO } from "@/types/RaffleAwardVO"
  *   4. 抽奖结束后通过 onEnd 回调弹窗提示中奖信息
  */
 export function LuckyWheelPage() {
-    // ============== URL 参数解析 ==============
-    // 获取当前页面 URL 中的查询参数对象，例如 ?strategyId=100001
-    const queryParams = new URLSearchParams(window.location.search);
-    // 从查询参数中获取 strategyId（抽奖策略 ID），并转换为数字类型；后续接口调用都会用到
-    const strategyId = Number(queryParams.get('strategyId'));
-
     // ============== 状态定义 ==============
     // 奖品列表状态：初始值为 [{}] 占位对象；通过 queryRaffleAwardListHandle 请求接口后填充真实奖品数据
     const [prizes, setPrizes] = useState([{}])
@@ -67,8 +61,11 @@ export function LuckyWheelPage() {
      *   5. 调用 setPrizes 更新组件状态，触发转盘重新渲染
      */
     const queryRaffleAwardListHandle = async () => {
+        const queryParams = new URLSearchParams(window.location.search);
+        const userId = String(queryParams.get('userId'));
+        const activityId = Number(queryParams.get('activityId'));
         // 调用接口获取奖品列表
-        const result = await queryRaffleAwardList(strategyId);
+        const result = await queryRaffleAwardList(userId, activityId);
         // 解析接口响应，提取业务码、提示信息和业务数据
         const { code, info, data } = await result.json();
         // 判断业务码：非 "0000" 视为失败，弹出提示并中断后续流程
@@ -104,23 +101,20 @@ export function LuckyWheelPage() {
      *   5. 返回中奖索引，供转盘 stop() 方法使用
      */
     const randomRaffleHandle = async () => {
+        const queryParams = new URLSearchParams(window.location.href);
+        const userId = String(queryParams.get('userId'));
+        const activityId = Number(queryParams.get('activityId'));
         // 调用后端随机抽奖接口
-        const result = await randomRaffle(strategyId);
+        const result = await draw(userId, activityId);
         // 解析接口响应
         const { code, info, data } = await result.json();
         // 业务失败处理
         if (code != "0000") {
-            window.alert("获取抽奖奖品列表失败 code:" + code + " info:" + info)
+            window.alert("随机抽奖失败 code:" + code + " info:" + info)
             return;
         }
         // 为了方便测试，mock 的接口直接返回 awardIndex 也就是奖品列表中第几个奖品。
-        // 优先使用接口返回的 awardIndex；若未返回，则根据 awardId 在 prizes 中查找对应索引
-        return data.awardIndex ? data.awardIndex : prizes.findIndex(prize =>
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            //@ts-ignore
-            // 通过比较奖品扇区字体的 id 与返回的 awardId 来定位中奖项
-            prize.fonts.some(font => font.id === data.awardId)
-        ) + 1;
+        return data.awardIndex - 1;
     }
 
     /**
