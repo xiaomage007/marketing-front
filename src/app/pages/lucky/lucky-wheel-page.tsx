@@ -21,7 +21,7 @@ import { RaffleAwardVO } from "@/types/RaffleAwardVO"
  *   3. 用户点击中心按钮后触发抽奖动画，2.5 秒后请求后端抽奖接口并停在中奖位置
  *   4. 抽奖结束后通过 onEnd 回调弹窗提示中奖信息
  */
-export function LuckyWheelPage() {
+export function LuckyWheelPage({ handleRefresh }) {
     // ============== 状态定义 ==============
     // 奖品列表状态：初始值为 [{}] 占位对象；通过 queryRaffleAwardListHandle 请求接口后填充真实奖品数据
     const [prizes, setPrizes] = useState([{}])
@@ -151,6 +151,13 @@ export function LuckyWheelPage() {
                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                         // @ts-ignore
                         myLucky.current.stop(prizeIndex);
+
+                        const timer = setTimeout(() => {
+                            handleRefresh()
+                        }, 550);
+
+                        // 清除定时器，以防组件在执行前被卸载
+                        return () => clearTimeout(timer);
                     }
                     );
 
