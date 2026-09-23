@@ -2,6 +2,7 @@ import { calendarSignRebate, isCalendarSignRebate, queryUserActivityAccount, que
 import React, { useEffect, useState } from "react";
 import { UserActivityAccountVO } from "@/types/UserActivityAccountVO";
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 export function MemberCard({ allRefresh }) {
     const [refresh, setRefresh] = useState(0);
